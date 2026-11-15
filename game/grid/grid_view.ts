@@ -2,15 +2,17 @@
 // Input, the HUD, sound, and the order of events all live outside it.
 import Phaser from "phaser";
 import type { Cell, GameEvent, GameState, Terrain } from "../../core/mod.ts";
-import { terrainAt } from "../../core/mod.ts";
+import { materialAt, terrainAt } from "../../core/mod.ts";
 
 export const CELL_SIZE = 32;
 const VIEW_WIDTH = 800;
 const VIEW_HEIGHT = 600;
 const WALK_MS = 120;
 const BUMP_MS = 60;
+const PICKUP_MS = 160;
 const MARKER_COLOR = 0xf5e6a8;
 const BUMP_COLOR = 0xe0533d;
+const STICK_COLOR = 0xa97c50;
 
 const TERRAIN_COLORS: Record<Terrain, number> = {
   grass: 0x5d9e4a,
@@ -31,11 +33,17 @@ function cellCenter({ x, y }: Cell): Cell {
   };
 }
 
+function cellKey({ x, y }: Cell): string {
+  return `${x},${y}`;
+}
+
 // One output of the presenter. It shows events; it decides nothing.
 // Humble Object: http://xunitpatterns.com/Humble%20Object.html
 export class GridView extends Phaser.Scene {
   private readonly seed: number;
   private readonly start: Cell;
+  private readonly collected: Set<string>;
+  private readonly sticks = new Map<string, Phaser.GameObjects.Graphics>();
   private ground!: Phaser.GameObjects.Graphics;
   private marker!: Phaser.GameObjects.Arc;
 
@@ -43,12 +51,14 @@ export class GridView extends Phaser.Scene {
     super("grid");
     this.seed = state.seed;
     this.start = { ...state.player };
+    this.collected = new Set(state.collected.map(cellKey));
   }
 
   create() {
     this.ground = this.add.graphics();
     const { x, y } = cellCenter(this.start);
     this.marker = this.add.circle(x, y, CELL_SIZE * 0.35, MARKER_COLOR);
+    this.marker.setDepth(2);
     this.cameras.main.startFollow(this.marker, true, 0.2, 0.2);
     this.drawCellsAround(this.start);
     this.fitToDisplay();
@@ -82,6 +92,8 @@ export class GridView extends Phaser.Scene {
         return this.walk(event.to);
       case "blocked":
         return this.bump(event.at, event.toward);
+      case "pickedUp":
+        return this.takeStick(event.at);
       default:
         // A new event type fails to type-check here until it has a presentation.
         event satisfies never;
@@ -124,6 +136,7 @@ export class GridView extends Phaser.Scene {
   // the world itself is never stored.
   private drawCellsAround({ x: centerX, y: centerY }: Cell) {
     this.ground.clear();
+    const wanted = new Map<string, Cell>();
     for (let y = centerY - CELLS_DOWN; y <= centerY + CELLS_DOWN; y++) {
       for (let x = centerX - CELLS_ACROSS; x <= centerX + CELLS_ACROSS; x++) {
         this.ground.fillStyle(TERRAIN_COLORS[terrainAt(this.seed, x, y)]);
@@ -133,8 +146,59 @@ export class GridView extends Phaser.Scene {
           CELL_SIZE - 1,
           CELL_SIZE - 1,
         );
+        const key = cellKey({ x, y });
+        if (materialAt(this.seed, x, y) !== null && !this.collected.has(key)) {
+          wanted.set(key, { x, y });
+        }
       }
     }
+    // Materials not ondscreen arent drawn
+    for (const [key, stick] of this.sticks) {
+      if (!wanted.has(key)) {
+        stick.destroy();
+        this.sticks.delete(key);
+      }
+    }
+    for (const [key, cell] of wanted) {
+      if (!this.sticks.has(key)) this.sticks.set(key, this.makeStick(cell));
+    }
+  }
+
+  //twig drawing
+  private makeStick(cell: Cell): Phaser.GameObjects.Graphics {
+    const stick = this.add.graphics();
+    const { x, y } = cellCenter(cell);
+    stick.setPosition(x, y);
+    stick.setDepth(1);
+    stick.lineStyle(3, STICK_COLOR);
+    stick.lineBetween(-7, 4, 7, -4);
+    stick.lineStyle(2, STICK_COLOR);
+    stick.lineBetween(2, -1, 6, 3);
+    return stick;
+  }
+
+  //Pick up stick, with tween animation
+  private takeStick(at: Cell): Promise<void> {
+    this.collected.add(cellKey(at));
+    const stick = this.sticks.get(cellKey(at));
+    if (!stick) return Promise.resolve();
+    this.sticks.delete(cellKey(at));
+    const { x, y } = cellCenter(at);
+    return new Promise((done) => {
+      this.tweens.add({
+        targets: stick,
+        x: x + CELL_SIZE * 0.15,
+        y: y - CELL_SIZE * 0.4,
+        scale: 0.2,
+        angle: 40,
+        alpha: 0,
+        duration: PICKUP_MS,
+        onComplete: () => {
+          stick.destroy();
+          done();
+        },
+      });
+    });
   }
 }
 

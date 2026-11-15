@@ -1,16 +1,25 @@
 import { assertEquals } from "@std/assert";
-import { apply, type GameState, isPassable, terrainAt } from "./mod.ts";
+import {
+  apply,
+  type GameState,
+  isPassable,
+  materialAt,
+  newGame,
+  terrainAt,
+} from "./mod.ts";
 
-// Each test has a Given-When-Then shape: https://martinfowler.com/bliki/GivenWhenThen.html
 const SEED = 121;
 
-// A state with the player just west of a cell that is, or is not, passable.
-// Searching keeps these tests honest if the terrain formula changes.
 function besideEasternCell(passable: boolean): GameState {
   for (let x = 2; x < 10_000; x++) {
     const here = isPassable(terrainAt(SEED, x, 0));
     const east = isPassable(terrainAt(SEED, x + 1, 0));
-    if (here && east === passable) return { seed: SEED, player: { x, y: 0 } };
+    if (!here || east !== passable) continue;
+    if (materialAt(SEED, x, 0) !== null) continue;
+    if (materialAt(SEED, x + 1, 0) !== null) continue;
+    const state = newGame(SEED);
+    state.player = { x, y: 0 };
+    return state;
   }
   throw new Error("Found no suitable cell on this row.");
 }
@@ -54,8 +63,6 @@ Deno.test("an event keeps its cells while state moves on", () => {
   const second = apply(state, { type: "move", direction: "west" });
   apply(state, { type: "move", direction: "east" });
 
-  // Both retained events still report the cells from when they happened, even
-  // though state.player has since changed.
   assertEquals(first, [{
     type: "moved",
     from: { x, y },
