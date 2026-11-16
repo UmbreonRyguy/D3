@@ -3,7 +3,12 @@
 // apply() decides how, or whether, to show them over time.
 
 import { type Material, materialAt } from "./materials.ts";
-import { type Craftable, type Recipe, RECIPES } from "./recipes.ts";
+import {
+  type Craftable,
+  type Recipe,
+  type RecipeId,
+  RECIPES,
+} from "./recipes.ts";
 import { isPassable, type Terrain, terrainAt } from "./terrain.ts";
 
 export type Cell = { x: number; y: number };
@@ -32,7 +37,7 @@ export type GameState = {
 // Command: https://gameprogrammingpatterns.com/command.html
 export type Command =
   | { type: "move"; direction: Direction }
-  | { type: "craft"; recipe: Craftable };
+  | { type: "craft"; recipe: RecipeId };
 
 // Domain Event: https://martinfowler.com/eaaDev/DomainEvent.html
 export type GameEvent =
@@ -64,12 +69,21 @@ export function missingFor(recipe: Recipe, inventory: Inventory): Inventory {
 }
 
 // The single way in. It updates the state it is given and returns the events.
+
 export function apply(state: GameState, command: Command): GameEvent[] {
   switch (command.type) {
     case "move":
       return move(state, command.direction);
-    case "craft":
-      return craft(state, RECIPES[command.recipe]);
+
+    case "craft": {
+      const recipe = RECIPES.find((recipe) => recipe.id === command.recipe);
+
+      if (!recipe) {
+        throw new Error(`Unknown recipe: ${command.recipe}`);
+      }
+
+      return craft(state, recipe);
+    }
   }
 }
 
@@ -82,7 +96,7 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   const from = { ...state.player };
   const to = { x: from.x + step.x, y: from.y + step.y };
   const terrain = terrainAt(state.seed, to.x, to.y);
-  if (!isPassable(terrain)) {
+  if (!isPassable(terrain, state.inventory)) {
     return [{ type: "blocked", at: from, toward: to, terrain }];
   }
   state.player.x = to.x;
@@ -113,19 +127,30 @@ function isCollected(state: GameState, { x, y }: Cell): boolean {
 
 function craft(state: GameState, recipe: Recipe): GameEvent[] {
   const missing = missingFor(recipe, state.inventory);
+
   if (Object.keys(missing).length > 0) {
-    return [{ type: "craftFailed", output: recipe.output, missing }];
+    return [{
+      type: "craftFailed",
+      output: recipe.outputs.item,
+      missing,
+    }];
   }
+
   for (const item of Object.keys(recipe.inputs) as Item[]) {
-    const left = (state.inventory[item] ?? 0) - (recipe.inputs[item] ?? 0);
+    const left = (state.inventory[item] ?? 0) -
+      (recipe.inputs[item] ?? 0);
+
     if (left > 0) state.inventory[item] = left;
     else delete state.inventory[item];
   }
-  state.inventory[recipe.output] = (state.inventory[recipe.output] ?? 0) + 1;
+
+  const output = recipe.outputs.item;
+  state.inventory[output] = (state.inventory[output] ?? 0) +
+    recipe.outputs.quantity;
 
   return [{
     type: "crafted",
-    output: recipe.output,
+    output,
     inventory: { ...state.inventory },
   }];
 }

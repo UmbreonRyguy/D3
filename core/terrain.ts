@@ -9,8 +9,14 @@ export function terrainAt(seed: number, x: number, y: number): Terrain {
   return noise(seed + 2, x, y, 6) < 0.45 ? "forest" : "grass";
 }
 
-export function isPassable(terrain: Terrain): boolean {
-  return terrain !== "water" && terrain !== "rock";
+export function isPassable(
+  terrain: Terrain,
+  inventory: Readonly<Partial<Record<string, number>>>,
+): boolean {
+  if (terrain === "water") {
+    return (inventory["makeshift boat"] ?? 0) > 0;
+  }
+  return terrain !== "rock";
 }
 
 function noise(seed: number, x: number, y: number, scale: number): number {

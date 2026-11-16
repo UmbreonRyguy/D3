@@ -36,11 +36,6 @@ export class Controller {
     addEventListener("blur", () => this.held = []);
   }
 
-  press(command: Command) {
-    this.pressed = command;
-    this.next();
-  }
-
   private keyDown(event: KeyboardEvent) {
     const direction = ARROWS[event.key];
     if (!direction || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -73,5 +68,10 @@ export class Controller {
     // here until the stack overflowed. No events means there is nothing to wait for.
     const events = apply(this.state, command);
     if (events.length > 0) this.presenter.play(events);
+  }
+
+  public command(command: Command): void {
+    this.pressed = command;
+    this.next();
   }
 }

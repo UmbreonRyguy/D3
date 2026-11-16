@@ -2,6 +2,7 @@
 // Facade: https://refactoring.guru/design-patterns/facade
 // Hexagonal Architecture (core inside, Phaser and tests as adapters): https://alistair.cockburn.us/hexagonal-architecture
 export * from "./materials.ts";
-export * from "./recipes.ts";
 export * from "./rules.ts";
 export * from "./terrain.ts";
+export * from "./recipes.ts";
+export * from "./can_reach.ts";

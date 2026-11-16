@@ -12,8 +12,8 @@ const SEED = 121;
 
 function besideEasternCell(passable: boolean): GameState {
   for (let x = 2; x < 10_000; x++) {
-    const here = isPassable(terrainAt(SEED, x, 0));
-    const east = isPassable(terrainAt(SEED, x + 1, 0));
+    const here = isPassable(terrainAt(SEED, x, 0), {});
+    const east = isPassable(terrainAt(SEED, x + 1, 0), {});
     if (!here || east !== passable) continue;
     if (materialAt(SEED, x, 0) !== null) continue;
     if (materialAt(SEED, x + 1, 0) !== null) continue;
