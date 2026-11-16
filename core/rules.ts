@@ -9,12 +9,13 @@ export type Cell = { x: number; y: number };
 
 export type Direction = "north" | "south" | "east" | "west";
 
-// What the player carries
+// What the player carries, counted by material. Absent materials are zero.
 export type Inventory = Partial<Record<Material, number>>;
 
-// Plain data that survives JSON. Terrain is absent because the seed can recompute
-// it: besides the seed, only what the player has caused belongs here.
-
+// Plain data that survives JSON. Terrain and ground materials are absent
+// because the seed can recompute them: besides the seed, only what the player
+// has caused belongs here — where they stand, what they carry, and which
+// ground cells they have already gathered.
 export type GameState = {
   seed: number;
   player: Cell;
@@ -68,11 +69,15 @@ function move(state: GameState, direction: Direction): GameEvent[] {
   return [{ type: "moved", from, to }, ...pickUp(state, to)];
 }
 
+// Walking onto ground that carries a material gathers it. A cell is spent once
+// it is gathered: state remembers it, so the same cell never pays out twice.
 function pickUp(state: GameState, at: Cell): GameEvent[] {
   const material = materialAt(state.seed, at.x, at.y);
   if (material === null || isCollected(state, at)) return [];
   state.collected.push({ ...at });
   state.inventory[material] = (state.inventory[material] ?? 0) + 1;
+  // The event carries the totals after the pickup, copied, so outputs can show
+  // them without asking state, which is already moving on.
   return [{
     type: "pickedUp",
     at: { ...at },

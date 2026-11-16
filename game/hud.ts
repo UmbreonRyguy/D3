@@ -44,6 +44,7 @@ export class Hud {
 
   private showInventory(inventory: Inventory) {
     const held = Object.entries(inventory)
+      .sort(([a], [b]) => (a < b ? -1 : 1))
       .map(([material, count]) => `${material} ×${count ?? 0}`);
     element("inventory").textContent = held.join(", ") || "empty";
   }

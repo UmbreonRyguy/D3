@@ -19,7 +19,7 @@ type Note = {
 const NOTES: Record<SoundName, Note[]> = {
   step: [{ frequency: 170, seconds: 0.04, wave: "triangle" }],
   bump: [{ frequency: 90, seconds: 0.09, wave: "square" }],
-  //new sound for collecting items
+  // A low knock, then a brighter ring as the material lands in the pack.
   pick: [
     { frequency: 330, seconds: 0.05, wave: "square" },
     { frequency: 660, seconds: 0.14, wave: "sine", at: 0.04 },
