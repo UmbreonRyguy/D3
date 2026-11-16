@@ -17,6 +17,14 @@ function describe(event: GameEvent): string {
       return `blocked by ${event.terrain} at ${event.toward.x}, ${event.toward.y}`;
     case "pickedUp":
       return `picked up a ${event.material}`;
+    case "crafted":
+      return `made a ${event.output}`;
+    case "craftFailed": {
+      const need = Object.entries(event.missing)
+        .map(([item, count]) => `${count} ${item}`)
+        .join(", ");
+      return `cannot make a ${event.output}: needs ${need}`;
+    }
   }
 }
 
@@ -34,7 +42,10 @@ export class Hud {
   show(event: GameEvent) {
     element("live").textContent = describe(event);
     if (event.type === "moved") this.showPosition(event.to.x, event.to.y);
-    if (event.type === "pickedUp") this.showInventory(event.inventory);
+    // Gather and craft both carry the pack as it stood when they happened.
+    if (event.type === "pickedUp" || event.type === "crafted") {
+      this.showInventory(event.inventory);
+    }
   }
 
   private showPosition(x: number, y: number) {

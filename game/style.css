@@ -58,6 +58,30 @@ body {
   cursor: pointer;
 }
 
+#recipes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#recipes button {
+  padding: 4px 10px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: #262a31;
+  border: 1px solid #3a3f48;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#recipes button:hover {
+  border-color: #59616e;
+}
+
 /* Slight tilt and vignette: pure presentation, Phaser untouched. */
 #grid {
   position: relative;

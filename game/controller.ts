@@ -36,6 +36,11 @@ export class Controller {
     addEventListener("blur", () => this.held = []);
   }
 
+  press(command: Command) {
+    this.pressed = command;
+    this.next();
+  }
+
   private keyDown(event: KeyboardEvent) {
     const direction = ARROWS[event.key];
     if (!direction || event.ctrlKey || event.metaKey || event.altKey) return;

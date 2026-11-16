@@ -13,14 +13,14 @@ const KINDS: Record<
   stone: { terrain: "grass", chance: 0.06, offset: 7 },
 };
 
-const NAMES = Object.keys(KINDS) as Material[];
+export const MATERIALS = Object.keys(KINDS) as Material[];
 
 export function materialAt(
   seed: number,
   x: number,
   y: number,
 ): Material | null {
-  for (const name of NAMES) {
+  for (const name of MATERIALS) {
     const { terrain, chance, offset } = KINDS[name];
     if (terrainAt(seed, x, y) !== terrain) continue;
     if (gridValue(seed + offset, x, y) < chance) return name;

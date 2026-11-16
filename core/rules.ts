@@ -3,14 +3,20 @@
 // apply() decides how, or whether, to show them over time.
 
 import { type Material, materialAt } from "./materials.ts";
+import { type Craftable, type Recipe, RECIPES } from "./recipes.ts";
 import { isPassable, type Terrain, terrainAt } from "./terrain.ts";
 
 export type Cell = { x: number; y: number };
 
 export type Direction = "north" | "south" | "east" | "west";
 
-// What the player carries, counted by material. Absent materials are zero.
-export type Inventory = Partial<Record<Material, number>>;
+// Everything the player can carry: materials gathered off the ground, and
+// things made from them by a craft. A made thing joins this list through the
+// recipe table's keys, not here.
+export type Item = Material | Craftable;
+
+// What the player carries, counted by item. Absent items are zero.
+export type Inventory = Partial<Record<Item, number>>;
 
 // Plain data that survives JSON. Terrain and ground materials are absent
 // because the seed can recompute them: besides the seed, only what the player
@@ -24,13 +30,17 @@ export type GameState = {
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
-export type Command = { type: "move"; direction: Direction };
+export type Command =
+  | { type: "move"; direction: Direction }
+  | { type: "craft"; recipe: Craftable };
 
 // Domain Event: https://martinfowler.com/eaaDev/DomainEvent.html
 export type GameEvent =
   | { type: "moved"; from: Cell; to: Cell }
   | { type: "blocked"; at: Cell; toward: Cell; terrain: Terrain }
-  | { type: "pickedUp"; at: Cell; material: Material; inventory: Inventory };
+  | { type: "pickedUp"; at: Cell; material: Material; inventory: Inventory }
+  | { type: "crafted"; output: Craftable; inventory: Inventory }
+  | { type: "craftFailed"; output: Craftable; missing: Inventory };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -44,11 +54,22 @@ export function newGame(seed: number): GameState {
   return { seed, player: { x: 0, y: 0 }, inventory: {}, collected: [] };
 }
 
+export function missingFor(recipe: Recipe, inventory: Inventory): Inventory {
+  const missing: Inventory = {};
+  for (const item of Object.keys(recipe.inputs) as Item[]) {
+    const gap = (recipe.inputs[item] ?? 0) - (inventory[item] ?? 0);
+    if (gap > 0) missing[item] = gap;
+  }
+  return missing;
+}
+
 // The single way in. It updates the state it is given and returns the events.
 export function apply(state: GameState, command: Command): GameEvent[] {
   switch (command.type) {
     case "move":
       return move(state, command.direction);
+    case "craft":
+      return craft(state, RECIPES[command.recipe]);
   }
 }
 
@@ -88,4 +109,23 @@ function pickUp(state: GameState, at: Cell): GameEvent[] {
 
 function isCollected(state: GameState, { x, y }: Cell): boolean {
   return state.collected.some((cell) => cell.x === x && cell.y === y);
+}
+
+function craft(state: GameState, recipe: Recipe): GameEvent[] {
+  const missing = missingFor(recipe, state.inventory);
+  if (Object.keys(missing).length > 0) {
+    return [{ type: "craftFailed", output: recipe.output, missing }];
+  }
+  for (const item of Object.keys(recipe.inputs) as Item[]) {
+    const left = (state.inventory[item] ?? 0) - (recipe.inputs[item] ?? 0);
+    if (left > 0) state.inventory[item] = left;
+    else delete state.inventory[item];
+  }
+  state.inventory[recipe.output] = (state.inventory[recipe.output] ?? 0) + 1;
+
+  return [{
+    type: "crafted",
+    output: recipe.output,
+    inventory: { ...state.inventory },
+  }];
 }
