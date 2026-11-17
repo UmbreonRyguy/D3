@@ -32,6 +32,7 @@ export type GameState = {
   player: Cell;
   inventory: Inventory;
   collected: Cell[];
+  gameOver: boolean;
 };
 
 // Command: https://gameprogrammingpatterns.com/command.html
@@ -45,7 +46,8 @@ export type GameEvent =
   | { type: "blocked"; at: Cell; toward: Cell; terrain: Terrain }
   | { type: "pickedUp"; at: Cell; material: Material; inventory: Inventory }
   | { type: "crafted"; output: Craftable; inventory: Inventory }
-  | { type: "craftFailed"; output: Craftable; missing: Inventory };
+  | { type: "craftFailed"; output: Craftable; missing: Inventory }
+  | { type: "gameOver" };
 
 const STEPS: Record<Direction, Cell> = {
   north: { x: 0, y: -1 },
@@ -56,7 +58,13 @@ const STEPS: Record<Direction, Cell> = {
 
 // Singleton, avoided on purpose: tests make as many games as they need. https://gameprogrammingpatterns.com/singleton.html
 export function newGame(seed: number): GameState {
-  return { seed, player: { x: 0, y: 0 }, inventory: {}, collected: [] };
+  return {
+    seed,
+    player: { x: 0, y: 0 },
+    inventory: {},
+    collected: [],
+    gameOver: false,
+  };
 }
 
 export function missingFor(recipe: Recipe, inventory: Inventory): Inventory {
@@ -71,6 +79,8 @@ export function missingFor(recipe: Recipe, inventory: Inventory): Inventory {
 // The single way in. It updates the state it is given and returns the events.
 
 export function apply(state: GameState, command: Command): GameEvent[] {
+  if (state.gameOver) return [];
+
   switch (command.type) {
     case "move":
       return move(state, command.direction);
@@ -148,9 +158,16 @@ function craft(state: GameState, recipe: Recipe): GameEvent[] {
   state.inventory[output] = (state.inventory[output] ?? 0) +
     recipe.outputs.quantity;
 
-  return [{
+  const craftedEvent: GameEvent = {
     type: "crafted",
     output,
     inventory: { ...state.inventory },
-  }];
+  };
+
+  if (recipe.capstone) {
+    state.gameOver = true;
+    return [craftedEvent, { type: "gameOver" }];
+  }
+
+  return [craftedEvent];
 }

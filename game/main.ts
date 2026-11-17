@@ -29,7 +29,7 @@ Object.assign(globalThis, {
 });
 
 //recipe book
-const recipeList = document.querySelector<HTMLUListElement>("#recipe-list");
+const recipeList = document.querySelector<HTMLUListElement>("#recipes");
 if (!recipeList) throw new Error("Recipe list not found");
 
 const recipeBook = new RecipeBook(

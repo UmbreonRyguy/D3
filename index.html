@@ -9,8 +9,17 @@
   </head>
   <body>
     <main id="app">
-      <div id="grid"></div>
+      <div id="grid">
+        <div id="ending-banner" hidden>
+          <h2>You Escaped!</h2>
+          <p>You built a Makeshift Boat and sailed away in search of freedom.</p>
+        </div>
+      </div>
+
       <aside id="hud">
+        <h2>Goal</h2>
+        <p id="goal">Build a Makeshift Boat and Escape the Island!</p>
+
         <dl>
           <dt>Position</dt>
           <dd id="position"></dd>
@@ -19,14 +28,16 @@
           <dt>Inventory</dt>
           <dd id="inventory"></dd>
         </dl>
+
         <p id="live" aria-live="polite"></p>
         <button id="mute" type="button" aria-pressed="false">Sound: on</button>
+
         <section id="recipe-book">
           <h2>Crafting</h2>
           <ul id="recipes"></ul>
-          <section>
-            </aside>
-            </main>
-            <script type="module" src="/game/main.ts"></script>
-            </body>
-            </html>
+        </section>
+      </aside>
+    </main>
+    <script type="module" src="/game/main.ts"></script>
+  </body>
+</html>

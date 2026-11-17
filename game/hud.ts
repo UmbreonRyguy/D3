@@ -28,6 +28,8 @@ function describe(event: GameEvent): string {
           .map(([item, quantity]) => `${quantity} ${item}`)
           .join(", ")
       }`;
+    case "gameOver":
+      return "You built the Makeshift Boat and can now Escape!";
   }
 }
 
@@ -47,6 +49,9 @@ export class Hud {
     if (event.type === "moved") this.showPosition(event.to.x, event.to.y);
     if (event.type === "pickedUp" || event.type === "crafted") {
       this.showInventory(event.inventory);
+    }
+    if (event.type === "gameOver") {
+      element("ending-banner").hidden = false;
     }
   }
 
