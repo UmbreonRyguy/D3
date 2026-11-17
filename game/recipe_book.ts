@@ -49,8 +49,6 @@ export class RecipeBook {
 
         button.textContent = `${recipe.name} (Missing: ${details})`;
       }
-
-      button.disabled = Object.keys(missing).length > 0;
     });
   }
 }
