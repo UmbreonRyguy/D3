@@ -15,6 +15,9 @@ const ARROWS: Record<string, Direction> = {
 export class Controller {
   private readonly state: GameState;
   private readonly presenter: Presenter;
+
+  public recorded: Command[] = [];
+
   // A tap made during a walk, kept until the presenter is free.
   private pressed: Command | null = null;
   private held: Direction[] = [];
@@ -63,6 +66,9 @@ export class Controller {
       (held ? { type: "move", direction: held } : null);
     this.pressed = null;
     if (!command) return;
+
+    //push event to recorded move list
+    this.recorded.push(command);
 
     // Playing nothing would report idle at once, and a held key would land back
     // here until the stack overflowed. No events means there is nothing to wait for.
