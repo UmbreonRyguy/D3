@@ -21,6 +21,19 @@ Goal: Gather materials, craft a raft and sail to build a makeshift boat, and esc
 | `Sail`           | 3 fibers + 4 leaves |
 | `Makeshift Boat` | 1 raft + 1 sail     |
 
+## Adding a Recipe
+
+Recipes are defined in `core/recipes.ts`.
+
+To add a new recipe:
+
+1. Add its recipe ID to the RecipeId type
+2. Add its output to the Craftable type if necessary
+3. Add its ingredients to the RECIPES array
+4. Update `core/rules.ts` or `GameEvent` only if the new recipe requires addiional game behavior
+5. Update `core/recipes_test.ts` with tests
+6. Update `TESTING.md` with manual test instructions
+
 # D3 starter
 
 A walking skeleton: one thin slice of a game that works from end to end. The player moves gridwise over a big seeded world, with a game core that knows nothing about Phaser and a Phaser client that presents what the core reports. Assignment instructions are on Canvas.
