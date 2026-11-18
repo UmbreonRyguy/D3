@@ -25,7 +25,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "raft",
     name: "Raft",
-    inputs: { stick: 4, fiber: 3 },
+    inputs: { log: 1, fiber: 3 },
     outputs: { item: "raft", quantity: 1 },
     capstone: false,
   },

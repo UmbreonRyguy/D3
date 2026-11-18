@@ -1,3 +1,26 @@
+# Game Intro - Stranded: Wilderness Survival
+
+Stranded on an island, you must gather resources, craft equipment, and build a boat to escape back to the mainland
+
+Goal: Gather materials, craft a raft and sail to build a makeshift boat, and escape
+
+# How to Play
+
+- Use the arrow keys to explore the island
+- Collect logs, fibers, leaves, and sticks
+- Use the recipe book to see available crafting recipes
+- Select recipes using the keyboard and press Enter or Space to craft
+- Build the equipment needed to escape
+
+# Crafting Recipes
+
+| Item             | Recipe              |
+| ---------------- | ------------------- |
+| `Sword`          | 2 sticks + 2 fibers |
+| `Raft`           | 1 log + 3 fibers    |
+| `Sail`           | 3 fibers + 4 leaves |
+| `Makeshift Boat` | 1 raft + 1 sail     |
+
 # D3 starter
 
 A walking skeleton: one thin slice of a game that works from end to end. The player moves gridwise over a big seeded world, with a game core that knows nothing about Phaser and a Phaser client that presents what the core reports. Assignment instructions are on Canvas.

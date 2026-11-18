@@ -69,3 +69,13 @@ Deno.test("crafting events keep independent inventory copies", () => {
 
   assertEquals(JSON.stringify(first), saved);
 });
+
+Deno.test("crafting a raft requires logs and fibers", () => {
+  const state = newGame(121);
+  state.inventory = { log: 1, fiber: 3 };
+
+  const events = apply(state, { type: "craft", recipe: "raft" });
+
+  assertEquals(state.inventory, { raft: 1 });
+  assertEquals(events[0].type, "crafted");
+});
